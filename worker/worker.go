@@ -26,7 +26,7 @@ func main(){
 	signal.Notify(sigchan, syscall.SIGINT, syscall.SIGTERM)
 
 	msgCount := 0
-
+	fmt.Println("msg count", msgCount)
 	// Get signal for finish
 	doneCh := make(chan struct{})
 	go func() {

@@ -71,7 +71,13 @@ func createComment(c *fiber.Ctx) error {
 	}
 	// convert body into bytes and send it to kafka
 	cmtInBytes, err := json.Marshal(cmt)
-	PushCommentToQueue("comments", cmtInBytes)
+	if err != nil {
+		fmt.Println("failed to marshal jason data ")
+	}
+	err = PushCommentToQueue("comments", cmtInBytes)
+	if err != nil {
+		fmt.Println("failed to push comments to queue")
+	}
 
 	// Return Comment in JSON format
 	err = c.JSON(&fiber.Map{
