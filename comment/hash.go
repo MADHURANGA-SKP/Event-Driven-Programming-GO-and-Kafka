@@ -1,4 +1,4 @@
-package main
+package comment
 
 import (
 	"fmt"
@@ -9,7 +9,18 @@ import (
 	"github.com/IBM/sarama"
 )
 
-func main(){
+func connectConsumer(brokersUrl []string) (sarama.Consumer, error) {
+	config := sarama.NewConfig()
+	config.Consumer.Return.Errors = true
+	conn, err := sarama.NewConsumer(brokersUrl, config)
+	if err != nil {
+		return nil, err
+	}
+	fmt.Println("conn", conn)
+	return conn, nil
+}
+
+func Comment() {
 	topic := "comments"
 	worker, err := connectConsumer([]string{"localhost:29092"})
 	if err != nil {
@@ -26,9 +37,8 @@ func main(){
 	signal.Notify(sigchan, syscall.SIGINT, syscall.SIGTERM)
 
 	msgCount := 0
-	fmt.Println("msg count", msgCount)
 	// Get signal for finish
-	doneCh := make(chan struct{})
+	donehashCh := make(chan struct{})
 	go func() {
 		for {
 			select {
@@ -39,26 +49,14 @@ func main(){
 				fmt.Printf("Received message Count %d: | Topic(%s) | Message(%s) \n", msgCount, string(msg.Topic), string(msg.Value))
 			case <-sigchan:
 				fmt.Println("Interrupt is detected")
-				doneCh <- struct{}{}
+				donehashCh <- struct{}{}
 			}
 		}
 	}()
 
-	<- doneCh
+	<- donehashCh
 	fmt.Println("Processed", msgCount, "messages")
 	if err := worker.Close(); err != nil {
 		panic(err)
 	}
 }
-
-func connectConsumer(brokersUrl []string) (sarama.Consumer, error) {
-	config := sarama.NewConfig()
-	config.Consumer.Return.Errors = true
-	conn, err := sarama.NewConsumer(brokersUrl, config)
-	if err != nil {
-		return nil, err
-	}
-
-	return conn, nil
-}
-
